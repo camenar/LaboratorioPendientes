@@ -654,18 +654,36 @@
 <script>
 
 /* ── QR ──────────────────────────────────────────────────── */
-function actualizarQR(url) {
+function actualizarQR(url, _intentos) {
+  _intentos = _intentos || 0;
   url = url.trim();
   var canvas = document.getElementById("qr-canvas");
   var loading = document.getElementById("qr-loading");
   var display = document.getElementById("qr-url-display");
+  if (!canvas || !loading || !display) return;
   if (!url || url.length < 8) { canvas.style.display="none"; loading.style.display="flex"; loading.textContent="—"; display.textContent="—"; return; }
   if (!url.startsWith("http")) url = "https://" + url;
   display.textContent = url; loading.style.display="flex"; loading.textContent="…"; canvas.style.display="none";
-  QRCode.toCanvas(canvas, url, { width:100, margin:1, color:{ dark:"#0b1f3a", light:"#ffffff" } }, function(err) {
-    loading.style.display="none";
-    if (err) { loading.textContent="Error"; loading.style.display="flex"; } else { canvas.style.display="block"; }
-  });
+
+  // Si la librería QRCode aún no cargó (CDN lento), reintentar hasta 20 veces (4s)
+  if (typeof QRCode === "undefined") {
+    if (_intentos < 20) {
+      setTimeout(function(){ actualizarQR(url, _intentos+1); }, 200);
+    } else {
+      loading.textContent="Error: librería QR no cargó";
+    }
+    return;
+  }
+
+  try {
+    QRCode.toCanvas(canvas, url, { width:100, margin:1, color:{ dark:"#0b1f3a", light:"#ffffff" } }, function(err) {
+      loading.style.display="none";
+      if (err) { loading.textContent="Error"; loading.style.display="flex"; } else { canvas.style.display="block"; }
+    });
+  } catch(e) {
+    loading.textContent="Error QR";
+    loading.style.display="flex";
+  }
 }
 
 /* ── Simulador canvas ────────────────────────────────────── */
@@ -691,9 +709,10 @@ function dibujarCanvas(dy, dx, pct, ok) {
   if (!canvas) return;
   var dpr = window.devicePixelRatio || 1;
   var rect = canvas.getBoundingClientRect();
-  var W = Math.round(rect.width * dpr), H = Math.round(rect.height * dpr);
+  var W = Math.round(rect.width * dpr) || 800, H = Math.round(rect.height * dpr) || 360;
   if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
   var ctx = canvas.getContext("2d");
+  if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   var Wl = rect.width, Hl = rect.height;
   ctx.clearRect(0,0,Wl,Hl);
@@ -929,27 +948,35 @@ function inyectarGeoGebra() {
 }
 
 window.addEventListener("load",function(){
-  inyectarGeoGebra();
-  actualizarSim();
+  try { inyectarGeoGebra(); } catch(e) { console.warn("inyectarGeoGebra:", e); }
+  try { actualizarSim(); } catch(e) { console.warn("actualizarSim:", e); }
 
   // Estado de conexión con Google Sheets
-  var statusBox  = document.getElementById("sheets-status");
-  var statusText = document.getElementById("sheets-status-text");
-  var conectado = GOOGLE_ENDPOINT !== "REEMPLAZAR_CON_TU_URL_DE_APPS_SCRIPT" &&
-                  GOOGLE_ENDPOINT.indexOf("https://script.google.com") === 0;
-  if (conectado) {
-    statusBox.style.borderLeftColor = "var(--success)";
-    statusText.innerHTML = '<strong style="color:var(--success)">✅ Conectado a Google Sheets</strong> — las notas, situaciones y la reflexión grupal de cada equipo se registran automáticamente en la hoja de cálculo del docente.';
-  } else {
-    statusBox.style.borderLeftColor = "var(--amber)";
-    statusText.innerHTML = '<strong style="color:var(--amber)">🔧 Para el docente:</strong> reemplaza <code style="background:var(--smoke);padding:2px 6px;border-radius:3px;">GOOGLE_ENDPOINT</code> en el script con la URL de tu Apps Script para almacenar las notas automáticamente en la nube. El marcador en pantalla funciona siempre de forma local.';
-  }
-  var url=window.location.href, input=document.getElementById("qr-url-input");
-  if(input&&!url.includes("localhost")&&!url.includes("127.0.0.1")&&url.startsWith("http")){
-    input.value=url; actualizarQR(url);
-  } else if(document.getElementById("qr-loading")){
-    document.getElementById("qr-loading").textContent="—";
-  }
+  try {
+    var statusBox  = document.getElementById("sheets-status");
+    var statusText = document.getElementById("sheets-status-text");
+    var conectado = GOOGLE_ENDPOINT !== "REEMPLAZAR_CON_TU_URL_DE_APPS_SCRIPT" &&
+                    GOOGLE_ENDPOINT.indexOf("https://script.google.com") === 0;
+    if (conectado) {
+      statusBox.style.borderLeftColor = "var(--success)";
+      statusText.innerHTML = '<strong style="color:var(--success)">✅ Conectado a Google Sheets</strong> — las notas, situaciones y la reflexión grupal de cada equipo se registran automáticamente en la hoja de cálculo del docente.';
+    } else {
+      statusBox.style.borderLeftColor = "var(--amber)";
+      statusText.innerHTML = '<strong style="color:var(--amber)">🔧 Para el docente:</strong> reemplaza <code style="background:var(--smoke);padding:2px 6px;border-radius:3px;">GOOGLE_ENDPOINT</code> en el script con la URL de tu Apps Script para almacenar las notas automáticamente en la nube. El marcador en pantalla funciona siempre de forma local.';
+    }
+  } catch(e) { console.warn("sheets-status:", e); }
+
+  // QR
+  try {
+    var qrUrl = window.location.href;
+    var qrInput = document.getElementById("qr-url-input");
+    if (qrInput && !qrUrl.includes("localhost") && !qrUrl.includes("127.0.0.1") && qrUrl.startsWith("http")) {
+      qrInput.value = qrUrl;
+      actualizarQR(qrUrl);
+    } else if (document.getElementById("qr-loading")) {
+      document.getElementById("qr-loading").textContent = "—";
+    }
+  } catch(e) { console.warn("QR init:", e); }
   // Preview equipo en tiempo real
   function actualizarPreview(){
     var grupo=document.getElementById("teamName");
