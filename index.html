@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laboratorio Virtual · Pendiente como Razón de Cambio · Grado 8°</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* ── Tokens ──────────────────────────────────────────────── */
+    :root {
+      --navy:   #0b1f3a;
+      --navy2:  #142d52;
+      --teal:   #1a9c8a;
+      --teal2:  #13b59f;
+      --amber:  #f5a623;
+      --paper:  #f7f4ee;
+      --smoke:  #e8e4dc;
+      --ink:    #1a1614;
+      --muted:  #5c5853;
+      --white:  #ffffff;
+      --success:#19a07a;
+      --error:  #c0392b;
+      --radius: 10px;
+      --shadow: 0 4px 24px rgba(11,31,58,.10);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-snap-type: y proximity; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.65; }
+
+    /* ── HERO ────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      width: 100%;
+      background: var(--navy);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 70% 120%, rgba(26,156,138,.25) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 10% -10%, rgba(245,166,35,.12) 0%, transparent 60%);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px 110px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      scroll-snap-align: start;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.03) 39px, rgba(255,255,255,.03) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.03) 39px, rgba(255,255,255,.03) 40px);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(26,156,138,.2);
+      border: 1px solid rgba(26,156,138,.45);
+      color: var(--teal2);
+      font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 40px; margin-bottom: 20px; position: relative;
+    }
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.15; max-width: 700px; margin: 0 auto 16px; position: relative;
+    }
+    .hero-sub {
+      color: rgba(255,255,255,.65); font-size: 15px;
+      max-width: 560px; margin: 0 auto 24px; position: relative;
+    }
+    .hero-pills {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center; position: relative; margin-bottom: 20px;
+    }
+    .pill {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 40px; padding: 6px 16px; font-size: 13px; color: rgba(255,255,255,.80);
+    }
+    .pill strong { color: var(--amber); }
+
+    /* ── Nav flotante dentro del hero ────────────────────────── */
+    .nav-strip {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.20);
+      border-radius: 40px;
+      display: flex; gap: 4px; padding: 4px 10px;
+      backdrop-filter: blur(8px); z-index: 10; white-space: nowrap;
+    }
+    .nav-strip a {
+      color: rgba(255,255,255,.80); text-decoration: none;
+      font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 30px;
+      transition: background .2s, color .2s; white-space: nowrap;
+    }
+    .nav-strip a:hover { color: #fff; background: rgba(255,255,255,.15); }
+
+    /* ── QR ──────────────────────────────────────────────────── */
+    .qr-panel { display: flex; justify-content: center; position: relative; }
+    .qr-box {
+      background: rgba(255,255,255,.07);
+      border: 1.5px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 12px 18px;
+      max-width: 540px; width: 100%;
+      display: flex; align-items: center; gap: 16px;
+      backdrop-filter: blur(6px);
+    }
+    .qr-frame {
+      background: #fff; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      width: 100px; height: 100px; flex-shrink: 0; position: relative;
+      box-shadow: 0 2px 10px rgba(0,0,0,.2);
+    }
+    .qr-loading { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#999; }
+    .qr-label { font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal2);margin-bottom:4px; }
+    .qr-url { font-size:10px;color:rgba(255,255,255,.45);margin-bottom:6px;word-break:break-all; }
+    .qr-input {
+      width:100%;padding:6px 10px;border-radius:6px;
+      border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);
+      color:#fff;font-size:11px;outline:none;box-sizing:border-box;margin-bottom:6px;
+    }
+    .qr-input::placeholder { color:rgba(255,255,255,.35); }
+    .qr-input:focus { border-color:var(--teal); }
+    .qr-hint { font-size:10px;color:rgba(255,255,255,.4);line-height:1.4; }
+
+    /* ── Wrap ────────────────────────────────────────────────── */
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+    /* ── Fases ───────────────────────────────────────────────── */
+    .phase {
+      min-height: 100vh; padding: 70px 0 60px;
+      border-bottom: 1px solid var(--smoke);
+      scroll-snap-align: start;
+    }
+    .phase:last-of-type { border-bottom: none; }
+    .phase-header { display:flex;align-items:flex-start;gap:18px;margin-bottom:32px; }
+    .phase-num { flex-shrink:0;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:22px;color:#fff; }
+    .num-1{background:var(--navy);} .num-2{background:var(--teal);} .num-3{background:var(--amber);color:var(--ink);}
+    .phase-title { font-family:'DM Serif Display',serif;font-size:24px;color:var(--navy);line-height:1.2; }
+    .phase-meta { font-size:13px;color:var(--muted);margin-top:4px; }
+    .phase-meta span { display:inline-block;background:var(--smoke);border-radius:4px;padding:2px 8px;margin-right:6px;margin-top:4px; }
+
+    /* ── Callout ─────────────────────────────────────────────── */
+    .callout { background:var(--white);border-left:4px solid var(--teal);border-radius:0 var(--radius) var(--radius) 0;padding:16px 20px;margin-bottom:28px;font-size:15px;color:var(--ink);box-shadow:var(--shadow); }
+    .callout strong { color:var(--teal); }
+
+    /* ── Videos ──────────────────────────────────────────────── */
+    .video-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px; }
+    .video-card { background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--smoke); }
+    .video-card-body { padding:16px 18px 18px; }
+    .video-tag { display:inline-block;background:var(--navy);color:#fff;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:8px; }
+    .video-card-body h3 { font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px; }
+    .video-card-body p { font-size:13px;color:var(--muted);line-height:1.5; }
+    .video-thumb-link { display:block;position:relative;overflow:hidden;background:#000; }
+    .video-thumb-link img { width:100%;height:200px;object-fit:cover;display:block;transition:transform .3s; }
+    .video-thumb-link:hover img { transform:scale(1.04); }
+    .play-overlay { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);transition:background .2s; }
+    .video-thumb-link:hover .play-overlay { background:rgba(0,0,0,.5); }
+    .play-btn { width:52px;height:52px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4);transition:transform .2s; }
+    .video-thumb-link:hover .play-btn { transform:scale(1.1); }
+    .btn-watch { display:inline-block;margin:10px 16px 14px;background:var(--teal);color:#fff;text-decoration:none;padding:7px 16px;border-radius:5px;font-size:13px;font-weight:700;transition:background .2s; }
+    .btn-watch:hover { background:var(--teal2); }
+
+    /* ── GeoGebra wrap ───────────────────────────────────────── */
+    .ggb-wrap { background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--smoke);overflow:hidden; }
+    .ggb-toolbar { background:var(--navy);padding:12px 20px;color:#fff;font-size:13px;display:flex;align-items:center;gap:10px; }
+    .ggb-toolbar span { width:10px;height:10px;border-radius:50%;display:inline-block; }
+    .dot-r{background:#e74c3c;} .dot-y{background:var(--amber);} .dot-g{background:var(--teal);}
+
+    /* ── Guide grid ──────────────────────────────────────────── */
+    .guide-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px; }
+    .guide-card { background:var(--white);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border-top:3px solid var(--teal); }
+    .guide-card p { font-size:14px;color:var(--ink);line-height:1.55; }
+    .guide-q { font-weight:700;color:var(--teal);font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px; }
+
+    /* ── Quiz / Form ─────────────────────────────────────────── */
+    .quiz-intro { display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px; }
+    .rubric-card { background:var(--white);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);border:1px solid var(--smoke); }
+    .rubric-card h4 { font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--navy);margin-bottom:14px; }
+    .rubric-row { display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed var(--smoke);font-size:14px; }
+    .rubric-row:last-child { border-bottom:none; }
+    .rubric-row .val { font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal); }
+    .form-wrap { background:var(--white);border-radius:var(--radius);padding:30px 32px;box-shadow:var(--shadow);border:1px solid var(--smoke); }
+    .form-row { margin-bottom:24px; }
+    .form-label { display:block;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--navy);margin-bottom:8px; }
+    .form-input { width:100%;padding:13px 16px;border:1.5px solid var(--smoke);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--ink);background:var(--paper);transition:border-color .2s,box-shadow .2s;outline:none; }
+    .form-input:focus { border-color:var(--teal);box-shadow:0 0 0 3px rgba(26,156,138,.12); }
+    .problem-box { background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border-radius:var(--radius);padding:24px 26px;margin-bottom:24px; }
+    .problem-box .pb-label { font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:10px; }
+    .problem-box p { font-size:15px;line-height:1.7; }
+    .formula { font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,.10);border-radius:5px;display:inline-block;padding:4px 12px;margin-top:10px;font-size:14px; }
+    .options-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px; }
+    .option-btn { position:relative;background:var(--paper);border:2px solid var(--smoke);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);transition:all .2s; }
+    .option-btn:hover { border-color:var(--teal);background:var(--white); }
+    .option-btn.selected { border-color:var(--teal);background:rgba(26,156,138,.08); }
+    .option-btn.correct { border-color:var(--success);background:rgba(25,160,122,.12);color:var(--success); }
+    .option-btn.wrong { border-color:var(--error);background:rgba(192,57,43,.08);color:var(--error); }
+    .opt-letter { display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--navy);color:#fff;border-radius:50%;font-size:12px;font-weight:700;margin-right:10px;flex-shrink:0;vertical-align:middle; }
+    .btn-submit { width:100%;padding:16px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.03em;transition:opacity .2s,transform .1s;margin-top:4px; }
+    .btn-submit:hover { opacity:.9; } .btn-submit:active { transform:scale(.99); } .btn-submit:disabled { opacity:.5;cursor:not-allowed; }
+    #result-panel { display:none;margin-top:28px;border-radius:var(--radius);padding:28px 30px;border:2px solid transparent; }
+    #result-panel.success { display:block;background:rgba(25,160,122,.07);border-color:var(--success); }
+    #result-panel.fail { display:block;background:rgba(192,57,43,.06);border-color:var(--error); }
+    .result-score { font-family:'DM Serif Display',serif;font-size:52px;line-height:1;margin-bottom:6px; }
+    .result-score.good { color:var(--success); } .result-score.bad { color:var(--error); }
+    #result-panel h3 { font-size:18px;margin-bottom:8px;color:var(--navy); }
+    #result-panel p { font-size:14px;color:var(--muted);line-height:1.6; }
+
+    /* ── Scoreboard ──────────────────────────────────────────── */
+    .scoreboard { background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--smoke);overflow:hidden; }
+    .sb-header { background:var(--navy);padding:16px 22px;color:#fff;display:flex;align-items:center;gap:12px; }
+    .sb-header h3 { font-size:15px;font-weight:700; }
+    .sb-dot { width:8px;height:8px;border-radius:50%;background:var(--teal2);animation:pulse 1.5s infinite; }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    #score-table { width:100%;border-collapse:collapse; }
+    #score-table th { background:var(--smoke);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--navy);padding:10px 18px;text-align:left; }
+    #score-table td { padding:12px 18px;font-size:14px;border-bottom:1px solid var(--smoke); }
+    #score-table tr:last-child td { border-bottom:none; }
+    #score-table tr:hover td { background:var(--paper); }
+    .score-badge { display:inline-block;padding:3px 10px;border-radius:20px;font-weight:700;font-size:13px;font-family:'JetBrains Mono',monospace; }
+    .score-badge.high{background:rgba(25,160,122,.15);color:var(--success);} .score-badge.low{background:rgba(192,57,43,.12);color:var(--error);}
+    #no-scores { padding:40px 20px;text-align:center;color:var(--muted);font-size:14px; }
+    .btn-clear { margin:0 18px 16px;background:none;border:1px solid var(--smoke);border-radius:6px;padding:7px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s; }
+    .btn-clear:hover { border-color:var(--error);color:var(--error); }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    footer { background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:28px 20px;font-size:13px;margin-top:0; }
+    footer strong { color:rgba(255,255,255,.8); }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media(max-width:640px){.phase-header{flex-direction:column;}.form-wrap{padding:22px 18px;}.quiz-intro{grid-template-columns:1fr;}.options-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════════ -->
+<header class="hero">
+  <div class="wrap">
+    <span class="hero-badge">Laboratorio Virtual · Grado 8°</span>
+    <h1>La Pendiente como<br>Razón de Cambio</h1>
+    <p class="hero-sub">Un entorno de aprendizaje activo que integra exploración multimedia, modelación dinámica y evaluación colaborativa autoevaluable.</p>
+    <div class="hero-pills">
+      <span class="pill"><strong>Área:</strong> Álgebra y Pensamiento Variacional</span>
+      <span class="pill"><strong>Duración:</strong> 2h 20 min</span>
+      <span class="pill"><strong>Modalidad:</strong> Presencial enriquecido</span>
+      <span class="pill"><strong>Grupos:</strong> Tríos cooperativos</span>
+    </div>
+    <div class="qr-panel">
+      <div class="qr-box">
+        <div class="qr-frame" id="qr-frame">
+          <canvas id="qr-canvas"></canvas>
+          <div class="qr-loading" id="qr-loading">—</div>
+        </div>
+        <div style="flex:1;text-align:left;">
+          <div class="qr-label">📱 Escanea para ingresar</div>
+          <div class="qr-url" id="qr-url-display">—</div>
+          <input class="qr-input" id="qr-url-input" type="url"
+            placeholder="Pega aquí la URL pública (GitHub Pages, Netlify…)"
+            oninput="actualizarQR(this.value)"/>
+          <div class="qr-hint">Publica el HTML y el QR se genera automáticamente.</div>
+        </div>
+      </div>
+    </div>
+    <!-- Nav flotante dentro del hero -->
+    <nav class="nav-strip">
+      <a href="#fase1">① Activación</a>
+      <a href="#fase2">② Modelación</a>
+      <a href="#fase3">③ Reto grupal</a>
+      <a href="#marcador">📊 Marcador</a>
+    </nav>
+  </div>
+</header>
+
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FASE 1: ACTIVACIÓN AUDIOVISUAL
+═══════════════════════════════════════════════════════════ -->
+<section class="phase" id="fase1">
+  <div class="wrap">
+    <div class="phase-header">
+      <div class="phase-num num-1">1</div>
+      <div>
+        <div class="phase-title">Fase de Activación: Aplicaciones Reales de la Pendiente</div>
+        <div class="phase-meta">
+          <span>📹 Trabajo autónomo</span>
+          <span>⏱ 20 minutos</span>
+          <span>👤 Individual</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Propósito:</strong> Conectar el concepto matemático de pendiente con contextos reales de ingeniería civil y accesibilidad urbana. Observa los dos videos con tu equipo antes de responder mentalmente: ¿qué relación hay entre la inclinación de una rampa y la expresión m = Δy / Δx?
+    </div>
+
+    <div class="video-grid">
+      <div class="video-card">
+        <a class="video-thumb-link" href="https://www.youtube.com/watch?v=Hb4vTFZ676A" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/Hb4vTFZ676A/hqdefault.jpg"
+               alt="Aplicaciones de la Pendiente en Infraestructura"
+               loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+               style="width:100%;height:200px;object-fit:cover;display:block;transition:transform .3s;"/>
+          <div style="display:none;background:linear-gradient(135deg,#0b1f3a,#142d52);height:200px;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+            <div style="width:56px;height:56px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;">▶</div>
+            <div style="color:rgba(255,255,255,.7);font-size:12px;padding:0 16px;text-align:center;">Aplicaciones de la Pendiente en Infraestructura</div>
+          </div>
+          <div class="play-overlay"><span class="play-btn">▶</span></div>
+        </a>
+        <div class="video-card-body">
+          <span class="video-tag">Video A</span>
+          <h3>Aplicaciones de la Pendiente en Infraestructura</h3>
+          <p>Analiza cómo ingenieros y arquitectos calculan inclinaciones en rampas, carreteras y escaleras bajo normativas técnicas de accesibilidad.</p>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <a class="video-thumb-link" href="https://www.youtube.com/watch?v=5k0z7jT2NB4" target="_blank" rel="noopener">
+          <img src="https://img.youtube.com/vi/5k0z7jT2NB4/hqdefault.jpg"
+               alt="Diseñando la Rampa: Modelación con GeoGebra"
+               loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+               style="width:100%;height:200px;object-fit:cover;display:block;transition:transform .3s;"/>
+          <div style="display:none;background:linear-gradient(135deg,#142d52,#1a4a6e);height:200px;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+            <div style="width:56px;height:56px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;">▶</div>
+            <div style="color:rgba(255,255,255,.7);font-size:12px;padding:0 16px;text-align:center;">Diseñando la Rampa: Modelación con GeoGebra</div>
+          </div>
+          <div class="play-overlay"><span class="play-btn">▶</span></div>
+        </a>
+        <div class="video-card-body">
+          <span class="video-tag">Video B</span>
+          <h3>Diseñando la Rampa: Modelación con GeoGebra</h3>
+          <p>Guía para construir el modelo dinámico e interpretar visualmente cómo cambia la pendiente al modificar las dimensiones de la rampa.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FASE 2: LABORATORIO GEOGEBRA
+═══════════════════════════════════════════════════════════ -->
+<section class="phase" id="fase2">
+  <div class="wrap">
+    <div class="phase-header">
+      <div class="phase-num num-2">2</div>
+      <div>
+        <div class="phase-title">Fase de Co-indagación: Laboratorio Dinámico Variacional</div>
+        <div class="phase-meta">
+          <span>🧮 Asistida por docente</span><span>⏱ 40 minutos</span><span>👥 Tríos cooperativos</span>
+        </div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Instrucción:</strong> Usa los dos applets en secuencia. En el <strong>Applet A</strong> arrastra los puntos hasta construir la pendiente indicada. En el <strong>Applet B</strong> ajusta los sliders para modelar la rampa real y verificar la norma (<strong>máx. 8%</strong> según NTC 4774).
+    </div>
+
+    <!-- APPLET A: GeoGebra -->
+    <div class="ggb-wrap" style="margin-bottom:24px; margin-left:-24px; margin-right:-24px; border-radius:0;">
+      <div class="ggb-toolbar">
+        <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+        &nbsp; Applet A — GeoGebra: arrastra los puntos y construye la pendiente indicada
+      </div>
+      <div id="ggb-a-container" style="width:100%; background:#fff;">
+        <!-- El iframe se inyecta por JS con el ancho exacto del contenedor -->
+        <div id="ggb-a-placeholder" style="height:460px; display:flex; align-items:center; justify-content:center; color:#aaa; font-size:13px;">Cargando applet…</div>
+      </div>
+      <div style="padding:8px 16px 10px;background:#fafafa;border-top:1px solid #eee;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:#888;">¿No carga?</span>
+        <a href="https://www.geogebra.org/m/gV9GRCRN" target="_blank" rel="noopener"
+          style="background:var(--teal);color:#fff;text-decoration:none;padding:5px 14px;border-radius:5px;font-size:12px;font-weight:700;display:inline-block;">🔗 Abrir en GeoGebra</a>
+      </div>
+    </div>
+
+    <!-- Separador -->
+    <div style="display:flex;align-items:center;gap:14px;margin:0 0 24px;margin-top:24px;">
+      <div style="flex:1;height:1px;background:var(--smoke);"></div>
+      <span style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;">Applet B — Simulador de Rampas</span>
+      <div style="flex:1;height:1px;background:var(--smoke);"></div>
+    </div>
+
+    <!-- APPLET B: Simulador canvas -->
+    <div class="ggb-wrap">
+      <div class="ggb-toolbar">
+        <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+        &nbsp; Applet B — Simulador: modela la rampa con Δy y Δx y verifica la norma NTC 4774
+      </div>
+      <div style="background:#fff;padding:16px 20px 12px;">
+        <canvas id="ramp-canvas" style="width:100%;height:340px;border:1px solid #e8e4dc;border-radius:8px;display:block;background:#fafafa;cursor:crosshair;"></canvas>
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:20px 32px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <label style="font-size:13px;font-weight:700;color:#0b1f3a;">Altura vertical <span style="font-family:monospace;">Δy</span></label>
+              <span id="dy-label" style="font-size:14px;font-weight:700;font-family:monospace;color:#1a9c8a;background:#f0faf8;padding:2px 10px;border-radius:20px;">1.8 m</span>
+            </div>
+            <input id="dy-val" type="range" min="0.5" max="5" step="0.1" value="1.8" style="width:100%;accent-color:#1a9c8a;" oninput="actualizarSim()">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:2px;"><span>0.5 m</span><span>5.0 m</span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <label style="font-size:13px;font-weight:700;color:#0b1f3a;">Avance horizontal <span style="font-family:monospace;">Δx</span></label>
+              <span id="dx-label" style="font-size:14px;font-weight:700;font-family:monospace;color:#1a9c8a;background:#f0faf8;padding:2px 10px;border-radius:20px;">22.5 m</span>
+            </div>
+            <input id="dx-val" type="range" min="1" max="40" step="0.5" value="22.5" style="width:100%;accent-color:#1a9c8a;" oninput="actualizarSim()">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:2px;"><span>1 m</span><span>40 m</span></div>
+          </div>
+          <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            <div id="card-pct" style="border-radius:8px;padding:12px 16px;text-align:center;background:#e8f8f4;color:#0b6b55;transition:background .3s,color .3s;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;opacity:.8;">Pendiente</div>
+              <div id="val-pct" style="font-size:26px;font-weight:700;font-family:monospace;line-height:1;">8.0%</div>
+              <div style="font-size:10px;margin-top:4px;opacity:.65;">m = Δy / Δx × 100</div>
+            </div>
+            <div style="background:#f7f4ee;border-radius:8px;padding:12px 16px;text-align:center;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;color:#5c5853;">Ángulo</div>
+              <div id="val-ang" style="font-size:26px;font-weight:700;font-family:monospace;color:#0b1f3a;line-height:1;">4.6°</div>
+              <div style="font-size:10px;color:#aaa;margin-top:4px;">arctan(Δy / Δx)</div>
+            </div>
+            <div id="card-norma" style="border-radius:8px;padding:12px 16px;text-align:center;background:#e8f8f4;color:#0b6b55;transition:background .3s,color .3s;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;opacity:.8;">NTC 4774</div>
+              <div id="val-norma" style="font-size:22px;font-weight:700;line-height:1;">✔ CUMPLE</div>
+              <div style="font-size:10px;margin-top:4px;opacity:.65;">máx. permitido: 8%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preguntas guía -->
+    <div class="guide-grid">
+      <div class="guide-card"><div class="guide-q">🔍 Pregunta guía 1</div><p>En el Applet A, ¿qué le ocurre a la pendiente cuando subes el punto superior? Contrástalo con el Applet B.</p></div>
+      <div class="guide-card"><div class="guide-q">🔍 Pregunta guía 2</div><p>¿Qué combinaciones de Δy y Δx producen exactamente un 8% de pendiente? Anota al menos tres en el simulador.</p></div>
+      <div class="guide-card"><div class="guide-q">🔍 Pregunta guía 3</div><p>Si la pendiente es negativa en el Applet A, ¿qué interpretación física tendría eso en una rampa de acceso?</p></div>
+      <div class="guide-card"><div class="guide-q">🔍 Pregunta guía 4</div><p>¿Qué diferencia hay entre una pendiente del 8% y un ángulo de 8°? Discútelo con tu equipo antes de la Fase 3.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FASE 3: RETO GRUPAL AUTOEVALUABLE
+═══════════════════════════════════════════════════════════ -->
+<section class="phase" id="fase3">
+  <div class="wrap">
+    <div class="phase-header">
+      <div class="phase-num num-3">3</div>
+      <div>
+        <div class="phase-title">Fase de Reto: Dos Situaciones de Modelación Grupal</div>
+        <div class="phase-meta">
+          <span>🏆 Colaborativo</span><span>⏱ 60 minutos</span><span>👥 Tríos cooperativos</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz-intro">
+      <div class="rubric-card">
+        <h4>📋 Rúbrica de evaluación</h4>
+        <div class="rubric-row"><span>App web (dos situaciones)</span><span class="val">40%</span></div>
+        <div class="rubric-row"><span>Procedimiento escrito</span><span class="val">40%</span></div>
+        <div class="rubric-row"><span>Pregunta oral al docente</span><span class="val">20%</span></div>
+        <div class="rubric-row"><span>Escala de valoración</span><span class="val">1.0 → 5.0</span></div>
+      </div>
+      <div class="rubric-card">
+        <h4>🧰 Herramientas para el reto</h4>
+        <div class="rubric-row"><span>📐 Cuaderno — procedimiento algebraico</span></div>
+        <div class="rubric-row"><span>🧮 Calculadora — cálculo numérico final</span></div>
+        <div class="rubric-row"><span>📊 Applet B — verificar antes de enviar</span></div>
+        <div class="rubric-row"><span>📈 Applet A — contrastar en plano cartesiano</span></div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-bottom:28px;">
+      <strong>Secuencia de trabajo:</strong> ① Lean la situación → ② Despejen algebraicamente en el cuaderno → ③ Verifiquen en el <strong>Applet B</strong> → ④ Concerten la respuesta → ⑤ Envíen aquí.<br>
+      <strong>Cada equipo recibe valores únicos</strong> generados al azar — no se puede copiar de otro equipo.<br>
+      <strong style="color:var(--teal)">Nota:</strong> 2 correctas = 5.0 &nbsp;|&nbsp; 1 correcta = 3.0 &nbsp;|&nbsp; 0 correctas = 1.5
+    </div>
+
+    <div class="form-wrap">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:12px;">
+        <div>
+          <label class="form-label">Código del Equipo</label>
+          <select class="form-input" id="teamName" style="cursor:pointer;">
+            <option value="">— Selecciona tu grupo —</option>
+            <option value="Grupo 8.1">Grupo 8.1</option>
+            <option value="Grupo 8.2">Grupo 8.2</option>
+            <option value="Grupo 8.3">Grupo 8.3</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Integrante 1</label>
+          <input class="form-input" type="text" id="int1" placeholder="Nombre completo"/>
+        </div>
+        <div>
+          <label class="form-label">Integrante 2</label>
+          <input class="form-input" type="text" id="int2" placeholder="Nombre completo"/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:24px;">
+        <div>
+          <label class="form-label">Integrante 3</label>
+          <input class="form-input" type="text" id="int3" placeholder="Nombre completo"/>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <div id="team-preview" style="padding:10px 16px;background:var(--paper);border:1.5px solid var(--smoke);
+               border-radius:7px;font-size:13px;color:var(--muted);width:100%;min-height:46px;display:flex;align-items:center;">
+            Selecciona tu grupo e ingresa los nombres
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-bottom:28px;">
+        <button id="btn-generar" onclick="generarSituaciones()"
+          style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.03em;transition:opacity .2s;">
+          🎲 Generar mis situaciones de reto
+        </button>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">Cada equipo recibe valores distintos. Solo se generan una vez.</div>
+      </div>
+
+      <div id="situaciones-wrap" style="display:none;">
+
+        <!-- Situación 1 -->
+        <div class="problem-box" style="margin-bottom:20px;">
+          <div class="pb-label">📐 Situación 1 de 2 — Calcular la longitud horizontal (Δx)</div>
+          <p id="sit1-enunciado"></p>
+          <div class="formula" id="sit1-formula"></div>
+          <div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,.08);border-radius:6px;font-size:13px;color:rgba(255,255,255,.75);">
+            <strong>Pista:</strong> Pendiente (%) = (Δy / Δx) × 100 → despeja <strong>Δx = (Δy × 100) / Pendiente (%)</strong>
+          </div>
+        </div>
+        <label class="form-label">Situación 1 — Seleccionen la respuesta concertada:</label>
+        <div class="options-grid" id="opts1" style="margin-bottom:32px;"></div>
+
+        <!-- Situación 2 -->
+        <div class="problem-box" style="margin-bottom:20px;background:linear-gradient(135deg,#142d52,#1a4a6e);">
+          <div class="pb-label" style="color:var(--amber);">🏗️ Situación 2 de 2 — Calcular la altura máxima permitida (Δy)</div>
+          <p id="sit2-enunciado"></p>
+          <div class="formula" id="sit2-formula"></div>
+          <div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,.08);border-radius:6px;font-size:13px;color:rgba(255,255,255,.75);">
+            <strong>Pista:</strong> Pendiente (%) = (Δy / Δx) × 100 → despeja <strong>Δy = (Pendiente (%) × Δx) / 100</strong>
+          </div>
+        </div>
+        <label class="form-label">Situación 2 — Seleccionen la respuesta concertada:</label>
+        <div class="options-grid" id="opts2" style="margin-bottom:28px;"></div>
+
+        <!-- Pregunta de reflexión grupal -->
+        <div style="margin-bottom:28px;">
+          <div style="background:linear-gradient(135deg,#0f3a2e,#0d5c47);border-radius:10px;padding:20px 24px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#5ddfc4;margin-bottom:10px;">
+              💬 Pregunta de reflexión grupal — 20%
+            </div>
+            <p style="color:#fff;font-size:15px;line-height:1.7;margin-bottom:10px;">
+              Explica con las palabras de tu equipo: <strong>¿qué significa que una rampa tenga una pendiente del 8%?
+              ¿Por qué ese número es importante para el diseño de espacios accesibles?</strong>
+            </p>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);">
+              No hay respuesta única — el docente valorará la profundidad del razonamiento matemático y su conexión con el contexto real.
+            </div>
+          </div>
+          <textarea id="reflexion"
+            placeholder="Escriban aquí la respuesta del equipo (mínimo 2 oraciones)…"
+            style="width:100%; min-height:100px; padding:14px 16px;
+                   border:1.5px solid var(--smoke); border-radius:8px;
+                   font-family:'DM Sans',sans-serif; font-size:14px;
+                   color:var(--ink); background:var(--paper);
+                   resize:vertical; outline:none; box-sizing:border-box;
+                   transition:border-color .2s, box-shadow .2s; line-height:1.6;"
+            onfocus="this.style.borderColor='var(--teal)';this.style.boxShadow='0 0 0 3px rgba(26,156,138,.12)'"
+            onblur="this.style.borderColor='var(--smoke)';this.style.boxShadow='none'"
+          ></textarea>
+          <div id="reflexion-aviso" style="font-size:12px;color:var(--muted);margin-top:6px;">
+            Esta respuesta se enviará al docente junto con sus resultados.
+          </div>
+        </div>
+
+        <button class="btn-submit" id="btn-enviar" onclick="enviarRespuesta()">
+          Enviar soluciones y reflexión →
+        </button>
+
+        <div id="result-panel">
+          <div id="result-s1" style="margin-bottom:10px;"></div>
+          <div id="result-s2" style="margin-bottom:16px;"></div>
+          <div style="text-align:center;">
+            <div class="result-score" id="result-score"></div>
+            <h3 id="result-title" style="margin:8px 0 4px;"></h3>
+            <p id="result-msg"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MARCADOR EN VIVO
+═══════════════════════════════════════════════════════════ -->
+<section class="phase" id="marcador">
+  <div class="wrap">
+    <div class="phase-header" style="margin-bottom:20px">
+      <div>
+        <div class="phase-title">📊 Marcador en vivo — Sesión actual</div>
+        <div class="phase-meta"><span>Actualización local</span><span>Solo visible en este dispositivo</span></div>
+      </div>
+    </div>
+
+    <div class="scoreboard">
+      <div class="sb-header">
+        <div class="sb-dot"></div>
+        <h3>Registro de equipos — Laboratorio: La Pendiente como Razón de Cambio</h3>
+      </div>
+      <div id="no-scores">Aún no hay equipos registrados. Los envíos aparecerán aquí en tiempo real.</div>
+      <table id="score-table" style="display:none">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Equipo</th>
+            <th>Integrantes</th>
+            <th>Nota (App)</th>
+            <th>Hora</th>
+          </tr>
+        </thead>
+        <tbody id="score-tbody"></tbody>
+      </table>
+      <button class="btn-clear" onclick="limpiarMarcador()">🗑 Limpiar marcador</button>
+    </div>
+
+    <!-- INSTRUCCIONES PARA DOCENTE -->
+    <div class="callout" id="sheets-status" style="margin-top:28px;">
+      <span id="sheets-status-text">Verificando conexión con Google Sheets…</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<footer>
+  <strong>Laboratorio Virtual: La Pendiente como Razón de Cambio</strong><br>
+  Diseñado por <strong>Carlos Alberto Mena Romaña</strong> · I.E. Merceditas Gómez Martínez · Itagüí, Antioquia<br>
+  Universidad Pontificia Bolivariana &amp; Secretaría de Educación de Medellín · Junio 2026
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+
+/* ── QR ──────────────────────────────────────────────────── */
+function actualizarQR(url) {
+  url = url.trim();
+  var canvas = document.getElementById("qr-canvas");
+  var loading = document.getElementById("qr-loading");
+  var display = document.getElementById("qr-url-display");
+  if (!url || url.length < 8) { canvas.style.display="none"; loading.style.display="flex"; loading.textContent="—"; display.textContent="—"; return; }
+  if (!url.startsWith("http")) url = "https://" + url;
+  display.textContent = url; loading.style.display="flex"; loading.textContent="…"; canvas.style.display="none";
+  QRCode.toCanvas(canvas, url, { width:100, margin:1, color:{ dark:"#0b1f3a", light:"#ffffff" } }, function(err) {
+    loading.style.display="none";
+    if (err) { loading.textContent="Error"; loading.style.display="flex"; } else { canvas.style.display="block"; }
+  });
+}
+
+/* ── Simulador canvas ────────────────────────────────────── */
+function actualizarSim() {
+  var dy  = parseFloat(document.getElementById("dy-val").value);
+  var dx  = parseFloat(document.getElementById("dx-val").value);
+  var pct = (dy / dx) * 100;
+  var ang = Math.atan(dy / dx) * 180 / Math.PI;
+  var ok  = pct <= 8.001;
+  document.getElementById("dy-label").textContent  = dy.toFixed(1) + " m";
+  document.getElementById("dx-label").textContent  = dx.toFixed(1) + " m";
+  document.getElementById("val-pct").textContent   = pct.toFixed(1) + "%";
+  document.getElementById("val-ang").textContent   = ang.toFixed(1) + "°";
+  document.getElementById("val-norma").textContent = ok ? "✔ CUMPLE" : "✘ NO CUMPLE";
+  var bg = ok ? "#e8f8f4" : "#fdecea", cl = ok ? "#0b6b55" : "#a93226";
+  document.getElementById("card-pct").style.background   = bg; document.getElementById("card-pct").style.color   = cl;
+  document.getElementById("card-norma").style.background = bg; document.getElementById("card-norma").style.color = cl;
+  dibujarCanvas(dy, dx, pct, ok);
+}
+
+function dibujarCanvas(dy, dx, pct, ok) {
+  var canvas = document.getElementById("ramp-canvas");
+  if (!canvas) return;
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.getBoundingClientRect();
+  var W = Math.round(rect.width * dpr), H = Math.round(rect.height * dpr);
+  if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+  var ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var Wl = rect.width, Hl = rect.height;
+  ctx.clearRect(0,0,Wl,Hl);
+  var color = ok ? "#1a9c8a" : "#c0392b", colorL = ok ? "#e8f8f4" : "#fdecea";
+  ctx.fillStyle="#fafafa"; ctx.fillRect(0,0,Wl,Hl);
+  ctx.strokeStyle="#eeeeee"; ctx.lineWidth=1;
+  for (var gx=0;gx<Wl;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,Hl);ctx.stroke();}
+  for (var gy=0;gy<Hl;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(Wl,gy);ctx.stroke();}
+  var mx=70,my=30,pw=Wl-mx-30,ph=Hl-my-60;
+  ctx.strokeStyle="#888"; ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(mx,my+ph);ctx.lineTo(mx+pw,my+ph);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx,my+ph);ctx.stroke();
+  ctx.fillStyle="#888";
+  ctx.beginPath();ctx.moveTo(mx+pw,my+ph);ctx.lineTo(mx+pw-8,my+ph-5);ctx.lineTo(mx+pw-8,my+ph+5);ctx.fill();
+  ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx-5,my+8);ctx.lineTo(mx+5,my+8);ctx.fill();
+  ctx.font="bold 12px Arial"; ctx.fillStyle="#555"; ctx.textAlign="center";
+  ctx.fillText("Δx — avance horizontal (m)", mx+pw/2, my+ph+46);
+  ctx.save();ctx.translate(18,my+ph/2+40);ctx.rotate(-Math.PI/2);ctx.fillText("Δy — altura (m)",0,0);ctx.restore();
+  var esc=Math.min(pw/dx,ph/dy)*0.85, ox=mx, oy=my+ph, ex=ox+dx*esc, ey=oy-dy*esc;
+  ctx.setLineDash([6,5]);ctx.strokeStyle="#bbb";ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ex,oy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ex,oy);ctx.lineTo(ex,ey);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=colorL;ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ex,ey);ctx.lineTo(ex,oy);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=5;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ex,ey);ctx.stroke();
+  [[ox,oy,"O (0,0)"],[ex,oy,"B ("+dx.toFixed(1)+",0)"],[ex,ey,"A ("+dx.toFixed(1)+","+dy.toFixed(1)+")"]].forEach(function(p,i){
+    ctx.beginPath();ctx.arc(p[0],p[1],6,0,2*Math.PI);ctx.fillStyle="#0b1f3a";ctx.fill();
+    ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();
+    ctx.font="bold 11px Arial";ctx.fillStyle="#0b1f3a";ctx.textAlign="left";
+    ctx.fillText(p[2],p[0]+(i===0?-54:10),p[1]+(i===2?-10:(i===0?-10:18)));
+  });
+  ctx.font="bold 12px monospace";ctx.fillStyle="#555";ctx.textAlign="center";
+  ctx.fillText("Δx = "+dx.toFixed(1)+" m", ox+(ex-ox)/2, oy+32);
+  ctx.save();ctx.translate(ex+28,ey+(oy-ey)/2);ctx.rotate(-Math.PI/2);ctx.fillText("Δy = "+dy.toFixed(1)+" m",0,0);ctx.restore();
+  var angRad=Math.atan(dy/dx);
+  ctx.strokeStyle="#e8971a";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(ox,oy,38,-angRad,0);ctx.stroke();
+  ctx.font="11px monospace";ctx.fillStyle="#e8971a";ctx.textAlign="left";
+  ctx.fillText(Math.round(angRad*180/Math.PI*10)/10+"°",ox+42,oy-10);
+  ctx.textAlign="left";ctx.font="bold 13px monospace";ctx.fillStyle=color;
+  ctx.fillText("m = "+dy.toFixed(1)+" / "+dx.toFixed(1)+" × 100 = "+pct.toFixed(2)+"%",mx,my+14);
+  ctx.font="11px Arial";ctx.fillStyle="#888";
+  ctx.fillText("NTC 4774: pendiente máx. 8%  →  "+(ok?"✔ Diseño viable":"✘ Pendiente excesiva"),mx,my+30);
+  var y8=oy-dx*esc*0.08;
+  if(y8>my){ctx.setLineDash([4,4]);ctx.strokeStyle="#e8971a";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ox,y8);ctx.lineTo(ex,y8);ctx.stroke();ctx.setLineDash([]);ctx.font="10px Arial";ctx.fillStyle="#e8971a";ctx.textAlign="right";ctx.fillText("8% máx.",ex-4,y8-4);}
+  ctx.textAlign="left";
+}
+
+/* ── Quiz: dos situaciones aleatorias ────────────────────── */
+var ALTURAS    = [1.2, 1.5, 1.8, 2.0, 2.4];
+var PENDIENTES = [6, 8, 10, 12];
+var AVANCES    = [15, 18, 20, 24, 30];
+var sit1=null, sit2=null, sel1=null, sel2=null;
+var submitted=false, situacionesGeneradas=false;
+var scores=[];
+var GOOGLE_ENDPOINT = "https://script.google.com/macros/s/AKfycbz5tOmk0EuTBRR44ib2bvFGhj43mT8bXh7jV8DEe02WMmbYIvMVnZdg4j7MUUczn9sj/exec";
+
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function redon(v,d){ return Math.round(v*Math.pow(10,d))/Math.pow(10,d); }
+
+function generarOpciones(correcta, unidad, dec) {
+  var ops=[correcta], intentos=0;
+  var factores=[0.5,0.6,0.75,1.25,1.5,1.8,2.0,0.8,1.1];
+  while(ops.length<4 && intentos<50){
+    intentos++;
+    var f=factores[Math.floor(Math.random()*factores.length)];
+    var cand=redon(correcta*f,dec);
+    if(cand>0 && cand!==correcta && ops.indexOf(cand)<0) ops.push(cand);
+  }
+  ops.sort(function(){return Math.random()-.5;});
+  return ops.map(function(v){return {val:v, label:v.toFixed(dec)+" "+unidad};});
+}
+
+function generarSituaciones() {
+  if(situacionesGeneradas) return;
+  situacionesGeneradas=true;
+  document.getElementById("btn-generar").disabled=true;
+  document.getElementById("btn-generar").style.opacity=".5";
+  var letras=["A","B","C","D"];
+
+  // Sit 1: dado Δy y pct%, calcular Δx
+  var dy1=rnd(ALTURAS), pct1=rnd(PENDIENTES);
+  var dx1c=redon((dy1*100)/pct1,2);
+  sit1={dy:dy1,pct:pct1,correcta:dx1c};
+  document.getElementById("sit1-enunciado").innerHTML=
+    "El acceso principal de la institución tiene una diferencia de nivel de <strong>"+dy1.toFixed(1)+" metros de altura</strong>. "+
+    "La norma NTC 4774 establece una pendiente máxima del <strong>"+pct1+"%</strong>.<br><br>"+
+    "Usa el <strong>Applet B</strong> para modelar la situación. "+
+    "<strong>¿Cuál es la longitud horizontal mínima que debe tener la rampa para que el diseño sea viable?</strong>";
+  document.getElementById("sit1-formula").textContent="Datos: Δy = "+dy1.toFixed(1)+" m  |  Pendiente máx. = "+pct1+"%  |  Calcular: Δx = ?";
+  var grid1=document.getElementById("opts1"); grid1.innerHTML="";
+  generarOpciones(dx1c,"m",2).forEach(function(op,i){
+    var btn=document.createElement("button"); btn.className="option-btn";
+    btn.dataset.val=op.val; btn.dataset.sit="1";
+    btn.innerHTML='<span class="opt-letter">'+letras[i]+'</span> '+op.label;
+    btn.onclick=function(){selectOption(this,1);}; grid1.appendChild(btn);
+  });
+
+  // Sit 2: dado Δx y pct%, calcular Δy (pct diferente)
+  var dx2=rnd(AVANCES);
+  var pct2=rnd(PENDIENTES.filter(function(p){return p!==pct1;}));
+  var dy2c=redon((pct2*dx2)/100,2);
+  sit2={dx:dx2,pct:pct2,correcta:dy2c};
+  document.getElementById("sit2-enunciado").innerHTML=
+    "El corredor lateral tiene una rampa de <strong>"+dx2+" metros de longitud horizontal</strong>. "+
+    "Si la pendiente de esa rampa es exactamente del <strong>"+pct2+"%</strong>.<br><br>"+
+    "Usa el <strong>Applet B</strong> para verificar visualmente. "+
+    "<strong>¿Cuál es la altura vertical (desnivel) que salva esa rampa?</strong>";
+  document.getElementById("sit2-formula").textContent="Datos: Δx = "+dx2+" m  |  Pendiente = "+pct2+"%  |  Calcular: Δy = ?";
+  var grid2=document.getElementById("opts2"); grid2.innerHTML="";
+  generarOpciones(dy2c,"m",2).forEach(function(op,i){
+    var btn=document.createElement("button"); btn.className="option-btn";
+    btn.dataset.val=op.val; btn.dataset.sit="2";
+    btn.innerHTML='<span class="opt-letter">'+letras[i]+'</span> '+op.label;
+    btn.onclick=function(){selectOption(this,2);}; grid2.appendChild(btn);
+  });
+
+  document.getElementById("situaciones-wrap").style.display="block";
+  document.getElementById("situaciones-wrap").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function selectOption(btn, sit) {
+  if(submitted) return;
+  document.getElementById("opts"+sit).querySelectorAll(".option-btn").forEach(function(b){b.classList.remove("selected");});
+  btn.classList.add("selected");
+  if(sit===1) sel1=parseFloat(btn.dataset.val);
+  else        sel2=parseFloat(btn.dataset.val);
+}
+
+function enviarRespuesta() {
+  if(submitted) return;
+  var equipo=document.getElementById("teamName").value.trim();
+  var int1=document.getElementById("int1").value.trim();
+  var int2=document.getElementById("int2").value.trim();
+  var int3=document.getElementById("int3").value.trim();
+  var integrantes=[int1,int2,int3].filter(function(n){return n;}).join(", ");
+  if(!equipo){alert("Por favor selecciona el código de tu grupo (8.1, 8.2 o 8.3).");return;}
+  if(!int1){alert("Por favor ingresa el nombre del Integrante 1.");return;}
+  var reflexion=document.getElementById("reflexion").value.trim();
+  if(!reflexion){alert("Por favor escriban la respuesta a la pregunta de reflexión grupal antes de enviar.");return;}
+  if(!situacionesGeneradas){alert("Primero genera tus situaciones.");return;}
+  if(sel1===null){alert("Selecciona una respuesta para la Situación 1.");return;}
+  if(sel2===null){alert("Selecciona una respuesta para la Situación 2.");return;}
+  submitted=true;
+  document.getElementById("btn-enviar").disabled=true;
+  var refEl=document.getElementById("reflexion");
+  if(refEl){ refEl.disabled=true; refEl.style.opacity=".7"; }
+  var ok1=Math.abs(sel1-sit1.correcta)<0.05, ok2=Math.abs(sel2-sit2.correcta)<0.05;
+  var aciertos=(ok1?1:0)+(ok2?1:0);
+  var nota=aciertos===2?5.0:aciertos===1?3.0:1.5;
+  var hora=new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+
+  ["opts1","opts2"].forEach(function(id,idx){
+    var sit=idx===0?sit1:sit2;
+    document.getElementById(id).querySelectorAll(".option-btn").forEach(function(btn){
+      if(Math.abs(parseFloat(btn.dataset.val)-sit.correcta)<0.05) btn.classList.add("correct");
+      else if(btn.classList.contains("selected")) btn.classList.add("wrong");
+      btn.onclick=null;
+    });
+  });
+
+  function resDiv(ok, label, correctaStr, procStr) {
+    return '<div style="padding:12px 16px;border-radius:8px;background:'+(ok?"#e8f8f4":"#fdecea")+';border-left:4px solid '+(ok?"#1a9c8a":"#c0392b")+';">'+
+      '<strong style="color:'+(ok?"#0b6b55":"#a93226")+'">'+label+': '+(ok?"✔ Correcta":"✘ Incorrecta")+'</strong><br>'+
+      '<span style="font-size:13px;color:#444;">Respuesta correcta: '+correctaStr+'<br>Procedimiento: '+procStr+'</span></div>';
+  }
+  document.getElementById("result-s1").innerHTML=resDiv(ok1,"Situación 1",
+    "Δx = "+sit1.correcta.toFixed(2)+" m",
+    "Δx = ("+sit1.dy.toFixed(1)+" × 100) / "+sit1.pct+" = "+sit1.correcta.toFixed(2)+" m");
+  document.getElementById("result-s2").innerHTML=resDiv(ok2,"Situación 2",
+    "Δy = "+sit2.correcta.toFixed(2)+" m",
+    "Δy = ("+sit2.pct+" × "+sit2.dx+") / 100 = "+sit2.correcta.toFixed(2)+" m");
+
+  document.getElementById("result-score").textContent=nota.toFixed(1);
+  document.getElementById("result-score").className="result-score "+(nota>=3.5?"good":"bad");
+  var msgs=[[0,"Revisemos el procedimiento con el docente.","Recuerden: despejen la variable antes de calcular."],
+            [1,"¡Buen trabajo! Una situación correcta.","Revisen la situación que falló con el docente."],
+            [2,"¡Excelente trabajo en equipo! Ambas correctas.","Dominaron el despeje algebraico en los dos sentidos de la razón de cambio."]];
+  document.getElementById("result-title").textContent=msgs[aciertos][1];
+  document.getElementById("result-msg").textContent=msgs[aciertos][2];
+  var panel=document.getElementById("result-panel");
+  panel.className=nota>=3.5?"success":"fail"; panel.style.display="block";
+  panel.scrollIntoView({behavior:"smooth",block:"center"});
+  if(nota>=5.0) confetti({particleCount:140,spread:70,origin:{y:.6},colors:["#1a9c8a","#f5a623","#fff"]});
+  scores.push({equipo:equipo,integrantes:integrantes,nota:nota,hora:hora,s1:(ok1?"✔":"✘"),s2:(ok2?"✔":"✘"),reflexion:reflexion});
+  renderScoreboard();
+  if(GOOGLE_ENDPOINT!=="REEMPLAZAR_CON_TU_URL_DE_APPS_SCRIPT"){
+    fetch(GOOGLE_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({equipo:equipo,integrantes:integrantes,nota:nota,sit1_ok:ok1,sit2_ok:ok2,hora:hora,reflexion:reflexion})
+    }).catch(function(e){console.warn(e);});
+  }
+}
+
+/* ── Marcador ────────────────────────────────────────────── */
+function renderScoreboard() {
+  var tbody=document.getElementById("score-tbody"),table=document.getElementById("score-table"),noMsg=document.getElementById("no-scores");
+  if(scores.length===0){table.style.display="none";noMsg.style.display="block";return;}
+  noMsg.style.display="none";table.style.display="table";
+  tbody.innerHTML=scores.map(function(s,i){
+    var cls=s.nota>=3.5?"high":"low";
+    var sits=s.s1!==undefined?" <small style='color:#888'>S1:"+s.s1+" S2:"+s.s2+"</small>":"";
+    var ref=s.reflexion?" <span title='"+escHtml(s.reflexion)+"' style='cursor:help;font-size:14px;'>💬</span>":"";
+  return "<tr><td>"+(i+1)+"</td><td><strong>"+escHtml(s.equipo)+"</strong></td><td>"+escHtml(s.integrantes||"—")+"</td><td><span class='score-badge "+cls+"'>"+s.nota.toFixed(1)+"</span>"+sits+ref+"</td><td>"+s.hora+"</td></tr>";
+  }).join("");
+}
+function limpiarMarcador(){if(!confirm("¿Limpiar el marcador?"))return;scores=[];renderScoreboard();}
+function escHtml(str){return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ── Init ────────────────────────────────────────────────── */
+/* ── GeoGebra iframe dinámico ────────────────────────────── */
+function inyectarGeoGebra() {
+  var container = document.getElementById("ggb-a-container");
+  if (!container) return;
+  var W = Math.round(container.getBoundingClientRect().width);
+  // Proporción original del applet: ~4:3 (960×720 aprox)
+  var H = Math.round(W * 0.55);
+  if (H < 460) H = 460;
+  var url = "https://www.geogebra.org/material/iframe/id/gV9GRCRN" +
+    "/width/" + W +
+    "/height/" + H +
+    "/border/ffffff/sfsb/false/smb/false/stb/false/stbh/false" +
+    "/ai/false/asb/false/sri/true/rc/false/ld/false/sdz/true/ctl/false";
+  var iframe = document.createElement("iframe");
+  iframe.src = url;
+  iframe.width  = W;
+  iframe.height = H;
+  iframe.style.cssText = "border:none; display:block; width:100%;";
+  iframe.allowFullscreen = true;
+  iframe.title = "GeoGebra: Pendiente con puntos móviles";
+  var placeholder = document.getElementById("ggb-a-placeholder");
+  if (placeholder) placeholder.remove();
+  container.appendChild(iframe);
+}
+
+window.addEventListener("load",function(){
+  inyectarGeoGebra();
+  actualizarSim();
+
+  // Estado de conexión con Google Sheets
+  var statusBox  = document.getElementById("sheets-status");
+  var statusText = document.getElementById("sheets-status-text");
+  var conectado = GOOGLE_ENDPOINT !== "REEMPLAZAR_CON_TU_URL_DE_APPS_SCRIPT" &&
+                  GOOGLE_ENDPOINT.indexOf("https://script.google.com") === 0;
+  if (conectado) {
+    statusBox.style.borderLeftColor = "var(--success)";
+    statusText.innerHTML = '<strong style="color:var(--success)">✅ Conectado a Google Sheets</strong> — las notas, situaciones y la reflexión grupal de cada equipo se registran automáticamente en la hoja de cálculo del docente.';
+  } else {
+    statusBox.style.borderLeftColor = "var(--amber)";
+    statusText.innerHTML = '<strong style="color:var(--amber)">🔧 Para el docente:</strong> reemplaza <code style="background:var(--smoke);padding:2px 6px;border-radius:3px;">GOOGLE_ENDPOINT</code> en el script con la URL de tu Apps Script para almacenar las notas automáticamente en la nube. El marcador en pantalla funciona siempre de forma local.';
+  }
+  var url=window.location.href, input=document.getElementById("qr-url-input");
+  if(input&&!url.includes("localhost")&&!url.includes("127.0.0.1")&&url.startsWith("http")){
+    input.value=url; actualizarQR(url);
+  } else if(document.getElementById("qr-loading")){
+    document.getElementById("qr-loading").textContent="—";
+  }
+  // Preview equipo en tiempo real
+  function actualizarPreview(){
+    var grupo=document.getElementById("teamName");
+    var i1=document.getElementById("int1");
+    var i2=document.getElementById("int2");
+    var i3=document.getElementById("int3");
+    var preview=document.getElementById("team-preview");
+    if(!grupo||!preview) return;
+    var nombres=[i1.value.trim(),i2.value.trim(),i3.value.trim()].filter(function(n){return n;});
+    if(grupo.value && nombres.length>0){
+      preview.innerHTML="<strong style='color:var(--navy)'>"+grupo.value+"</strong>&nbsp;·&nbsp;"+nombres.join(" &nbsp;|&nbsp; ");
+      preview.style.color="var(--ink)";
+    } else {
+      preview.textContent="Selecciona tu grupo e ingresa los nombres";
+      preview.style.color="var(--muted)";
+    }
+  }
+  ["teamName","int1","int2","int3"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener("input",actualizarPreview);
+    if(el) el.addEventListener("change",actualizarPreview);
+  });
+});
+var _rt; window.addEventListener("resize",function(){
+  clearTimeout(_rt);
+  _rt=setTimeout(function(){
+    actualizarSim();
+    // Re-inyectar GeoGebra si el ancho cambió significativamente
+    var container=document.getElementById("ggb-a-container");
+    var iframe=container?container.querySelector("iframe"):null;
+    if(iframe){
+      var newW=Math.round(container.getBoundingClientRect().width);
+      if(Math.abs(newW - iframe.width) > 40){
+        iframe.remove();
+        var ph=document.createElement("div");
+        ph.id="ggb-a-placeholder";
+        ph.style.cssText="height:460px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:13px;";
+        ph.textContent="Recargando…";
+        container.appendChild(ph);
+        inyectarGeoGebra();
+      }
+    }
+  },200);
+});
+
+</script>
+</body>
+</html>
